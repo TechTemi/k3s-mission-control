@@ -9,12 +9,11 @@ env:
   IMAGE_NAME: temiayo/k3s-mission-control
 
 jobs:
-  build-and-push:
-    name: Build Docker Image
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
@@ -23,64 +22,41 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t $IMAGE_NAME:latest .
-          docker tag $IMAGE_NAME:latest $IMAGE_NAME:${{ github.sha }}
-
-      - name: Push to Docker Hub
-        run: |
-          docker push $IMAGE_NAME:latest
-          docker push $IMAGE_NAME:${{ github.sha }}
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
   deploy:
-    name: Deploy to K3s
-    runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: build
+    runs-on: [self-hosted, linux, x64, k3s]
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
-
-      - name: Write kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG_DATA }}" > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-
-      - name: Show kubeconfig file exists
-        run: |
-          ls -la $HOME/.kube
-          test -f $HOME/.kube/config
-
-      - name: Test cluster connection
-        run: |
-          kubectl version --client
-          kubectl cluster-info
-          kubectl get nodes
+      - name: Verify runner and cluster access
+        run: kubectl get nodes
 
       - name: Apply manifests
         run: |
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
 
-      - name: Show deployments
-        run: |
-          kubectl get deployments
-          kubectl get pods -A
-
       - name: Update deployment image
         run: |
-          kubectl set image deployment/mission-control mission-control=$IMAGE_NAME:${{ github.sha }}
+          kubectl set image deployment/mission-control mission-control=${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/mission-control --timeout=120s
+          kubectl rollout status deployment/mission-control --timeout=180s
 
-      - name: Show running pods and service
+      - name: Show status
         run: |
-          kubectl get pods -l app=mission-control
-          kubectl get service mission-control-service
+          kubectl get deployments
+          kubectl get pods
+          kubectl get svc
