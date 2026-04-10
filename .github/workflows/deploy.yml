@@ -1,69 +1,43 @@
-name: Build and Deploy to K3s
+deploy:
+  name: Deploy to K3s
+  runs-on: ubuntu-latest
+  needs: build-and-push
 
-on:
-  push:
-    branches:
-      - main
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-env:
-  IMAGE_NAME: temiayo/k3s-mission-control
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v4
 
-jobs:
-  build-and-push:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
+    - name: Write kubeconfig
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBECONFIG_DATA }}" > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Test cluster connection
+      run: |
+        kubectl version --client
+        kubectl cluster-info
+        kubectl get nodes
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Apply manifests
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
 
-      - name: Build Docker image
-        run: |
-          docker build -t $IMAGE_NAME:latest .
-          docker tag $IMAGE_NAME:latest $IMAGE_NAME:${{ github.sha }}
+    - name: Show deployments
+      run: kubectl get deployments
 
-      - name: Push to Docker Hub
-        run: |
-          docker push $IMAGE_NAME:latest
-          docker push $IMAGE_NAME:${{ github.sha }}
+    - name: Update deployment image
+      run: |
+        kubectl set image deployment/mission-control mission-control=temiayo/k3s-mission-control:${{ github.sha }}
 
-  deploy:
-    name: Deploy to K3s
-    runs-on: ubuntu-latest
-    needs: build-and-push
+    - name: Wait for rollout
+      run: kubectl rollout status deployment/mission-control --timeout=120s
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
-
-      - name: Write kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG_DATA }}" > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-
-      - name: Update image tag in deployment manifest
-        run: |
-          sed -i "s|image: temiayo/k3s-mission-control:latest|image: $IMAGE_NAME:${{ github.sha }}|g" k8s/deployment.yaml
-
-      - name: Apply manifests to K3s
-        run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
-
-      - name: Wait for rollout
-        run: kubectl rollout status deployment/mission-control
-
-      - name: Show running pods and service
-        run: |
-          kubectl get pods -l app=mission-control
-          kubectl get service mission-control-service
+    - name: Show running pods and service
+      run: |
+        kubectl get pods -l app=mission-control
+        kubectl get service mission-control-service
