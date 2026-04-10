@@ -1,43 +1,78 @@
-deploy:
-  name: Deploy to K3s
-  runs-on: ubuntu-latest
-  needs: build-and-push
+name: Build and Deploy to K3s
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+on:
+  push:
+    branches:
+      - main
 
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v4
+env:
+  IMAGE_NAME: temiayo/k3s-mission-control
 
-    - name: Write kubeconfig
-      run: |
-        mkdir -p $HOME/.kube
-        echo "${{ secrets.KUBECONFIG_DATA }}" > $HOME/.kube/config
-        chmod 600 $HOME/.kube/config
+jobs:
+  build-and-push:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
 
-    - name: Test cluster connection
-      run: |
-        kubectl version --client
-        kubectl cluster-info
-        kubectl get nodes
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Apply manifests
-      run: |
-        kubectl apply -f k8s/deployment.yaml
-        kubectl apply -f k8s/service.yaml
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Show deployments
-      run: kubectl get deployments
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME:latest .
+          docker tag $IMAGE_NAME:latest $IMAGE_NAME:${{ github.sha }}
 
-    - name: Update deployment image
-      run: |
-        kubectl set image deployment/mission-control mission-control=temiayo/k3s-mission-control:${{ github.sha }}
+      - name: Push to Docker Hub
+        run: |
+          docker push $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:${{ github.sha }}
 
-    - name: Wait for rollout
-      run: kubectl rollout status deployment/mission-control --timeout=120s
+  deploy:
+    name: Deploy to K3s
+    runs-on: ubuntu-latest
+    needs: build-and-push
 
-    - name: Show running pods and service
-      run: |
-        kubectl get pods -l app=mission-control
-        kubectl get service mission-control-service
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Write kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_DATA }}" > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Test cluster connection
+        run: |
+          kubectl version --client
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Apply manifests
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - name: Show deployments
+        run: kubectl get deployments
+
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/mission-control mission-control=$IMAGE_NAME:${{ github.sha }}
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/mission-control --timeout=120s
+
+      - name: Show running pods and service
+        run: |
+          kubectl get pods -l app=mission-control
+          kubectl get service mission-control-service
