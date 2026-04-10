@@ -51,6 +51,11 @@ jobs:
           echo "${{ secrets.KUBECONFIG_DATA }}" > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
+      - name: Show kubeconfig file exists
+        run: |
+          ls -la $HOME/.kube
+          test -f $HOME/.kube/config
+
       - name: Test cluster connection
         run: |
           kubectl version --client
@@ -63,14 +68,17 @@ jobs:
           kubectl apply -f k8s/service.yaml
 
       - name: Show deployments
-        run: kubectl get deployments
+        run: |
+          kubectl get deployments
+          kubectl get pods -A
 
       - name: Update deployment image
         run: |
           kubectl set image deployment/mission-control mission-control=$IMAGE_NAME:${{ github.sha }}
 
       - name: Wait for rollout
-        run: kubectl rollout status deployment/mission-control --timeout=120s
+        run: |
+          kubectl rollout status deployment/mission-control --timeout=120s
 
       - name: Show running pods and service
         run: |
