@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mission-control
+  labels:
+    app: mission-control
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mission-control
+  template:
+    metadata:
+      labels:
+        app: mission-control
+    spec:
+      containers:
+      - name: mission-control
+        image: temiayo/k3s-mission-control:latest
+        ports:
+          - containerPort: 3000
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"

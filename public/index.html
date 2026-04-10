@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>K3s Mission Control</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a1a;
+      font-family: "Courier New", monospace;
+      color: #00ff88;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .glow {
+      text-shadow: 0 0 10px #00ff88, 0 0 30px #00ff88;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.65; }
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    .sub {
+      color: #888;
+      margin-bottom: 3rem;
+      letter-spacing: 4px;
+      font-size: 0.9rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .card {
+      background: #111130;
+      border: 1px solid #00ff8855;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 0 24px #00ff8844;
+    }
+
+    .icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .label {
+      color: #00ccff;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      margin-bottom: 0.4rem;
+    }
+
+    .val {
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
+    .badge {
+      margin-top: 3rem;
+      background: linear-gradient(135deg, #6a00ff, #00ccff);
+      color: #fff;
+      padding: 0.6rem 2rem;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="glow">&#x1F680; K3s Mission Control</h1>
+  <p class="sub">DEPLOYMENT SUCCESSFUL</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="icon">&#x26A1;</div>
+      <div class="label">STATUS</div>
+      <div class="val" style="color:#00ff88">ONLINE</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">&#x1F4E6;</div>
+      <div class="label">PLATFORM</div>
+      <div class="val" style="color:#00ccff">K3s + EC2</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">&#x1F527;</div>
+      <div class="label">PIPELINE</div>
+      <div class="val" style="color:#ff88ff">GitHub Actions</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">&#x1F433;</div>
+      <div class="label">CONTAINER</div>
+      <div class="val" style="color:#ffcc00">Docker Hub</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">&#x1F310;</div>
+      <div class="label">CLUSTER</div>
+      <div class="val" style="color:#ff6644">Kubernetes</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">&#x1F916;</div>
+      <div class="label">ENGINE</div>
+      <div class="val" style="color:#88ff44">K3s</div>
+    </div>
+  </div>
+
+  <div class="badge" id="b">&#x2705; LIVE ON KUBERNETES</div>
+
+  <script>
+    document.getElementById("b").textContent =
+      `Deployed at ${new Date().toLocaleTimeString()}`;
+  </script>
+</body>
+</html>
