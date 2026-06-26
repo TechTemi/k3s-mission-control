@@ -35,13 +35,15 @@ jobs:
     needs: build
     runs-on: [self-hosted, linux, x64, k3s]
 
+    env:
+      KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Verify runner and cluster access
         run: |
-          export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
           kubectl get nodes
 
       - name: Apply manifests
