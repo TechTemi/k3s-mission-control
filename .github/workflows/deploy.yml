@@ -49,6 +49,7 @@ jobs:
 
       - name: Apply manifests
         run: |
+          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f k8s/configmap.yml
           sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f k8s/deployment.yaml
           sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f k8s/service.yaml
 
