@@ -5,5 +5,5 @@ metadata:
 data:
   APP_ENV: "production"
   APP_NAME: "K3s Mission Control"
-  VERSION: "v2"
+  VERSION: "v3"
   PORT: "3000"

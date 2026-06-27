@@ -4,29 +4,43 @@ metadata:
   name: mission-control
   labels:
     app: mission-control
+
 spec:
-  replicas: 4
+  replicas: 3
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1 # at most 1 pod can be down during update
+      maxSurge: 1       # at most 1 extra pod can exist during update
+
   selector:
     matchLabels:
       app: mission-control
+
   template:
     metadata:
       labels:
         app: mission-control
+
     spec:
       containers:
         - name: mission-control
           image: temiayo/k3s-mission-control:latest
+
           ports:
             - containerPort: 3000
+
           envFrom:
             - configMapRef:
                 name: mission-control-config
             - secretRef:
                 name: mission-control-secret
+
           volumeMounts:
             - name: app-storage
               mountPath: /app/data
+
           resources:
             requests:
               memory: "64Mi"
@@ -34,6 +48,7 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "200m"
+
       volumes:
         - name: app-storage
           persistentVolumeClaim:
