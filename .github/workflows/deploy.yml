@@ -7,13 +7,14 @@ on:
 
 env:
   IMAGE_NAME: temiayo/k3s-mission-control
+  KUBECONFIG_PATH: /etc/rancher/k3s/k3s.yaml
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout latest code
         uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
@@ -40,31 +41,34 @@ jobs:
       - k3s
 
     steps:
-      - name: Checkout
+      - name: Sync EC2 runner with latest GitHub code
         uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-depth: 0
 
       - name: Verify runner and cluster access
         run: |
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get nodes
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} get nodes
 
-      - name: Apply manifests
+      - name: Apply Kubernetes manifests
         run: |
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f k8s/volume.yaml
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f k8s/configmap.yml
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f k8s/secret.yaml
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f k8s/deployment.yaml
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f k8s/service.yaml
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} apply -f k8s/volume.yaml
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} apply -f k8s/configmap.yml
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} apply -f k8s/secret.yaml
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} apply -f k8s/deployment.yaml
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} apply -f k8s/service.yaml
 
       - name: Update deployment image
         run: |
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml set image deployment/mission-control mission-control=${{ env.IMAGE_NAME }}:${{ github.sha }}
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} set image deployment/mission-control mission-control=${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Wait for rollout
         run: |
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml rollout status deployment/mission-control --timeout=180s
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} rollout status deployment/mission-control --timeout=180s
 
-      - name: Show status
+      - name: Show cluster status
         run: |
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get deployments
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get pods
-          sudo kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get svc
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} get deployments
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} get pods
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} get svc
