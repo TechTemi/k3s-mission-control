@@ -22,6 +22,8 @@ spec:
         envFrom:
         - configMapRef:
            name: mission-control-config # inject all keys as env vars  
+        - secretRef:
+           name: mission-control-secret # newly added secret 
         resources:
           requests:
             memory: "64Mi"
