@@ -18,12 +18,12 @@ spec:
       - name: mission-control
         image: temiayo/k3s-mission-control:latest
         ports:
-        - containerPort: 3000
+          - containerPort: 3000
         envFrom:
           - configMapRef:
-            name: mission-control-config # inject all keys as env vars  
+              name: mission-control-config # inject all keys as env vars  
           - secretRef:
-            name: mission-control-secret # newly added secret 
+              name: mission-control-secret # newly added secret 
         resources:
           requests:
             memory: "64Mi"
