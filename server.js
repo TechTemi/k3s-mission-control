@@ -2,11 +2,6 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-// Deliberate error for rollback demo
-if (process.env.APP_ENV === 'production') {
-throw new Error('Deliberate crash for rollback demo!');
-}
-
 const app = express();
 
 // Read config from environment variables injected by ConfigMap/Secret
