@@ -5,7 +5,7 @@ metadata:
   labels:
     app: mission-control
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: mission-control
@@ -15,19 +15,26 @@ spec:
         app: mission-control
     spec:
       containers:
-      - name: mission-control
-        image: temiayo/k3s-mission-control:latest
-        ports:
-          - containerPort: 3000
-        envFrom:
-          - configMapRef:
-              name: mission-control-config # inject all keys as env vars  
-          - secretRef:
-              name: mission-control-secret # newly added secret 
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "100m"
-          limits:
-            memory: "128Mi"
-            cpu: "200m"
+        - name: mission-control
+          image: temiayo/k3s-mission-control:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: mission-control-config
+            - secretRef:
+                name: mission-control-secret
+          volumeMounts:
+            - name: app-storage
+              mountPath: /app/data
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+      volumes:
+        - name: app-storage
+          persistentVolumeClaim:
+            claimName: mission-control-pvc
