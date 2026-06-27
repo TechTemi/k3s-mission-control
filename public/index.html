@@ -134,10 +134,14 @@
   </div>
 
   <div class="badge" id="b">&#x2705; LIVE ON KUBERNETES</div>
-
   <script>
-    document.getElementById("b").textContent =
-      `Deployed at ${new Date().toLocaleTimeString()}`;
-  </script>
+  // Fetch config from the server and display it
+  fetch('/config')
+   .then(r => r.json())
+   .then(cfg => {
+     document.querySelector('.sub').textContent = cfg.env.toUpperCase() + ' — ' + cfg.version;
+     document.getElementById('b').textContent = cfg.appName + ' — LIVE';
+    });
+</script>
 </body>
 </html>

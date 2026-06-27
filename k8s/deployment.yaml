@@ -5,7 +5,7 @@ metadata:
   labels:
     app: mission-control
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: mission-control
@@ -18,7 +18,10 @@ spec:
       - name: mission-control
         image: temiayo/k3s-mission-control:latest
         ports:
-          - containerPort: 3000
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+           name: mission-control-config # inject all keys as env vars  
         resources:
           requests:
             memory: "64Mi"
