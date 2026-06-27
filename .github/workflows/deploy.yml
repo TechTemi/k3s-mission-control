@@ -58,6 +58,7 @@ jobs:
           sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} apply -f k8s/secret.yaml
           sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} apply -f k8s/deployment.yaml
           sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} apply -f k8s/service.yaml
+          sudo kubectl --kubeconfig=${{ env.KUBECONFIG_PATH }} apply -f k8s/ingress.yaml
 
       - name: Update deployment image
         run: |
