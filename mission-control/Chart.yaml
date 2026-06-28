@@ -1,0 +1,19 @@
+apiVersion: v2
+name: mission-control
+description: K3s Mission Control dashboard — a Kubernetes-deployed Node.js app
+type: application
+
+# Chart version — increment this when you change templates or values
+version: 1.0.0
+
+# Application version being deployed
+appVersion: "3.0.0"
+
+keywords:
+  - nodejs
+  - kubernetes
+  - dashboard
+
+maintainers:
+  - name: Temi
+    email: temi.pco@gmail.com
